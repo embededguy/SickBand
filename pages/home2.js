@@ -30,6 +30,9 @@ const Home = ({ route }) => {
   const [temperature, setTemperature] = useState(0);
   const [BPM, setBPM] = useState(0);
   const [SpO2, setSpO2] = useState(0);
+  const [LDR, setLDR] = useState(0);
+  const [status, setStatus] = useState(0);
+
   const [ecgData, setEcgData] = useState([0,0,0,0,0,0,0,0,0,0]);
   const [collectedDataCount, setCollectedDataCount] = useState(0);
   const datax = {
@@ -58,35 +61,40 @@ const Home = ({ route }) => {
 
   const fetchData = async () => {
     try {
-      const response0 = await fetch(`http://${ipAddress}/temperature`);
+      const response0 = await fetch(`http://${ipAddress}/soil`);
       const data0 = await response0.text(); // Get response as plain text
       if(isNaN(parseFloat(data0))){
         setTemperature(0.0); // Convert text to number and set temperature
-
       }else{
         setTemperature(parseFloat(data0)); // Convert text to number and set temperature
       }
 
-      const response1 = await fetch(`http://${ipAddress}/ph`);
+      const response1 = await fetch(`http://${ipAddress}/water`);
       const data1 = await response1.text(); // Get response as plain text
       setBPM(parseFloat(data1)); // Convert text to number and set temperature
 
-      const response2 = await fetch(`http://${ipAddress}/soil`);
+      const response2 = await fetch(`http://${ipAddress}/ph`);
       const data2 = await response2.text(); // Get response as plain text
       setSpO2(parseFloat(data2)); // Convert text to number and set temperature
 
-      const response3 = await fetch(`http://${ipAddress}/water`);
+      const response3 = await fetch(`http://${ipAddress}/ldr`);
       const data3 = await response3.text(); // Get response as plain text
-      setEcgData(prevData => {
-        // Ensure that the array has a minimum length of 6
-        const newData = ecgData.length >= 1 ? prevData.slice(1) : prevData;
-        return [...newData, parseInt(data3)];
-      });
+      setLDR(parseINT(data3)); // Convert text to number and set temperature
 
     } catch (error) {
       console.error('Error fetching data:', error);
     }
   };
+
+  const togglePump = async () => {
+    try {
+      const response2 = await fetch(`http://${ipAddress}/pump_toggle`);
+      const data2 = await response2.text(); // Get response as plain text
+      setStatus(parseINT(data2)); // Convert text to number and set temperature
+    }catch (error) {
+    }
+  }
+
   
   return (
     <SafeAreaView style={styles.container}>
@@ -106,12 +114,12 @@ const Home = ({ route }) => {
         <Speedometer value={SpO2} totalValue={7} innerColor="#000" internalColor="#00aaff" showIndicator showLabels text="50.00" text="Temperature"/>
       </Row>
       <Row>
-              <Text style={styles.txt3}>Pump Status: ON</Text>
-      <Text style={styles.txt3}>Light Status: OFF</Text>
+      <Text style={styles.txt3}>Pump Status: {status}</Text>
+      <Text style={styles.txt3}>Light Status: {LDR}</Text>
 
       </Row>
       <Row>
-        <Button title="Pump Toggle"/>
+        <Button title="Pump Toggle" onPress={togglePump}/>
       </Row>
       <Text style={styles.txt}>(connected to {ipAddress})</Text>
       <Text style={styles.txt2}>Powered By Vhiron Technologies</Text>
